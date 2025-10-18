@@ -1,0 +1,12 @@
+{
+  email you@example.com
+}
+
+:80 {
+  redir https://{host}{uri}
+}
+
+:443 {
+  encode gzip
+  reverse_proxy web:8080
+}

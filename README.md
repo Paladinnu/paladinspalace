@@ -164,5 +164,31 @@ npm run images:cleanup -- --apply
 Proiect intern – defineste ulterior licenta dorita.
 
 ## Unelte Moderator
+## Deploy pe VPS (Docker Compose)
+
+Furnizor sugerat: Hetzner/Contabo/VPS local. Pachetele din repo:
+
+- `Dockerfile` – build pentru aplicație (Next.js + Prisma)
+- `docker-compose.yml` – servicii: web (app) + Postgres (db) + volum uploads
+- `Caddyfile` – proxy (HTTPS automat) – opțional
+- `.dockerignore` – reduce contextul de build
+
+Pași:
+
+1. Creați un server (Ubuntu 22.04+), instalați Docker & Compose.
+2. Setați DNS (A record) către IP-ul VPS.
+3. În directorul proiectului, creați `.env` cu variabile minime:
+	- `NEXTAUTH_URL=https://domeniul-tau`
+	- `NEXTAUTH_SECRET=<string random>`
+4. Lansați baza de date și aplicația:
+	- `docker compose up -d --build`
+5. (Opțional) Porniți Caddy ca reverse proxy cu TLS:
+	- `docker run -d --name caddy --restart unless-stopped -p 80:80 -p 443:443 -v $PWD/Caddyfile:/etc/caddy/Caddyfile:ro --network host caddy:2`
+
+Notă:
+- La start, containerul aplică migrațiile: `prisma migrate deploy`.
+- Upload-urile persistă în volumul `uploads` montat la `public/uploads`.
+- Pentru scalare/backup, mutați Postgres către un serviciu gestionat.
+
 - Aprobări în așteptare: `/dashboard`
 - Lista completă utilizatori cu ultimile 3 luni de anunțuri: `/dashboard/users` (fără email/parolă; include stare cont, rol, Discord legat, profil IC, anunțuri recente)
