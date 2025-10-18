@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npm run start:prepare && next start",
+    "start:prepare": "node -e \"(async()=>{try{console.log('Applying Prisma schema...');const {execa}=await import('node:child_process');const cp=require('child_process');cp.execSync('npx prisma migrate deploy',{stdio:'inherit'});}catch(e){console.error('Prisma migrate deploy failed (non-fatal for preview):',e?.message||e);}})()\"",
     "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
-    "vercel-build": "prisma generate && prisma db push && next build",
+  "vercel-build": "prisma generate && next build",
   "render-build": "npm run vercel-build",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
