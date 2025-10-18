@@ -1,0 +1,48 @@
+# Node / Next.js
+node_modules/
+.next/
+.out/
+dist/
+.build/
+.cache/
+.vercel/
+.turbo/
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma local databases
+prisma/*.db
+prisma/*.db-journal
+
+# Uploads and generated assets
+public/uploads/
+
+# IDE
+# Keep .vscode settings in repo if intentional; otherwise uncomment next line
+# .vscode/
+.idea/
+.eslintcache
+
+# Misc
+.pnp*

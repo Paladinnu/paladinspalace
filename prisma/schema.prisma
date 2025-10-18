@@ -1,0 +1,173 @@
+// Draft schema (will refine in later step)
+// SQLite dev database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  passwordHash   String
+  displayName    String
+  handle         String?      @unique
+  bio            String?
+  coverUrl       String?
+  fullNameIC     String?      // Nume Prenume IC (optional until migration applied, enforced in app logic)
+  inGameId       Int?         // In-game numeric ID (1-200000)
+  phoneIC        String?      // Numar Telefon IC
+  avatarUrl      String?      // User uploaded avatar path
+  discordTag     String?      // ex: User#1234
+  inGameName     String?
+  role           String       @default("USER") // USER | MODERATOR | ADMIN
+  status         String       @default("PENDING") // PENDING | APPROVED | SUSPENDED
+  verified       Boolean      @default(false) // Moderator-set trust badge
+  // Access control: non-moderators default to 30 days from registration unless extended
+  accessUntil    DateTime?
+  // Optional premium entitlement expiry
+  premiumUntil   DateTime?
+  listings       Listing[]
+  ratingsReceived Rating[]   @relation("ratingsReceived")
+  ratingsGiven    Rating[]   @relation("ratingsGiven")
+  accounts       Account[]
+  sessions       Session[]
+  tickets        Ticket[]
+  ticketMessages TicketMessage[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Int?
+  category    String?
+  imagesJson  String   @default("[]") // JSON array string
+  attributesJson String @default("{}") // JSON object string for category-specific attributes
+  searchIndex String   @default("") // normalized searchable text (title + description)
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
+  isGold      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // Helpful composite index for cursor pagination (createdAt DESC, id for tie-break)
+  @@index([createdAt, id])
+}
+
+// Archive record for a listing when it's deleted (or optionally on other events)
+model ListingSnapshot {
+  id         String   @id @default(cuid())
+  listingId  String
+  sellerId   String
+  data       String   // JSON string storing serialized listing detail
+  reason     String?  // e.g., DELETED, MOD_ACTION, etc.
+  createdAt  DateTime @default(now()) // time of snapshot
+
+  // Indexes for quick lookup
+  @@index([sellerId, createdAt])
+  @@index([listingId, createdAt])
+}
+
+// NextAuth models (Prisma Adapter)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? 
+  access_token      String? 
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // e.g. LISTING_CREATE, LISTING_UPDATE, PROFILE_UPDATE
+  entityType String?  // LISTING | USER
+  entityId   String?
+  ip         String?
+  userAgent  String?
+  metadata   String?  // JSON string (small)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+}
+
+// Store unique image assets for deduplication across listings
+model ImageAsset {
+  id          String   @id @default(cuid())
+  hash        String   @unique      // SHA256 of original binary
+  original    String                 // path to original file (public relative)
+  thumb       String?                // path to thumbnail
+  mime        String
+  width       Int?
+  height      Int?
+  blurDataURL String?                // small inline placeholder
+  createdAt   DateTime @default(now())
+}
+
+// Simple support ticketing
+model Ticket {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  createdAt DateTime @default(now())
+  messages  TicketMessage[]
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String?  // null for system/moderator if you store separately
+  body      String
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+// User ratings (seller reputation)
+model Rating {
+  id        String   @id @default(cuid())
+  sellerId  String
+  raterId   String
+  seller    User     @relation("ratingsReceived", fields: [sellerId], references: [id])
+  rater     User     @relation("ratingsGiven", fields: [raterId], references: [id])
+  score     Int      // 1..5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([sellerId, raterId])
+  @@index([sellerId, createdAt])
+}

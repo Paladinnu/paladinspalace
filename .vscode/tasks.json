@@ -1,0 +1,60 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build app",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Dev: Start (Next.js 3001)",
+			"type": "shell",
+			"command": "npm run dev -- -p 3001",
+			"isBackground": true,
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Dev: Kill port 3001 (Windows)",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"$p = (Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique); if ($p) { Stop-Process -Id $p -Force; Write-Output ('killed ' + $p) } else { Write-Output 'no listener on 3001' }\"",
+			"isBackground": false
+		},
+		{
+			"label": "Dev: Restart (3001)",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Dev: Kill port 3001 (Windows)",
+				"Dev: Start (Next.js 3001)"
+			]
+		},
+		{
+			"label": "Dev: Restart (3001)",
+			"type": "shell",
+			"command": "echo This placeholder will defer to dependsOn tasks",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Promote moderator cristian.losonti",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"promote",
+				"--",
+				"--email",
+				"cristian.losonti@gmail.com"
+			],
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		}
+	]
+}
