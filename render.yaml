@@ -7,6 +7,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-    buildCommand: npm ci && npm run vercel-build
+  buildCommand: npm ci --include=dev && npm run vercel-build
     startCommand: npm run start
     healthCheckPath: /
