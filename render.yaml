@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: paladins-palace
+    runtime: node
+    region: frankfurt
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+    buildCommand: npm ci && npm run vercel-build
+    startCommand: npm run start
+    disk:
+      name: public-uploads
+      mountPath: /opt/render/project/src/public/uploads
+      sizeGB: 1
+    healthCheckPath: /

@@ -9,6 +9,7 @@
     "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
     "vercel-build": "prisma generate && prisma db push && next build",
+  "render-build": "npm run vercel-build",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
