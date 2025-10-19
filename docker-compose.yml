@@ -40,6 +40,33 @@ services:
   #   ports:
   #     - "6379:6379"
 
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  dbdata:
+  uploads:
+  caddy_data:
+  caddy_config:
+    - caddy_data:/data
+    - caddy_config:/config
+  depends_on:
+    - app
+
+volumes:
+  caddy_data:
+  caddy_config:
+
 volumes:
   dbdata:
   uploads:

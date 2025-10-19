@@ -13,12 +13,15 @@ const PUBLIC_PREFIXES = [
   '/api/password',
   '/api/register',
   '/_next', // Next.js assets
+  '/marketplace',
+  '/uploads',
   '/favicon', '/icon', '/apple-icon',
   '/robots.txt', '/sitemap.xml'
 ];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const method = req.method;
   const requestId = req.headers.get('x-request-id') || cryptoRandom();
   // Allow the public welcome page as the first page for unauthenticated users
   if (pathname === '/') {
@@ -48,6 +51,20 @@ export async function middleware(req: NextRequest) {
     res.headers.set('x-request-id', requestId);
     applySecurityHeaders(res);
     return res;
+  }
+
+  // Public read-only APIs for marketplace and public profiles
+  // Allow unauthenticated GETs to listings and public user profile endpoints
+  if (method === 'GET') {
+    if (
+      pathname.startsWith('/api/listings') ||
+      pathname.startsWith('/api/users/by-handle')
+    ) {
+      const res = NextResponse.next();
+      res.headers.set('x-request-id', requestId);
+      applySecurityHeaders(res);
+      return res;
+    }
   }
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token) {
@@ -81,7 +98,7 @@ export async function middleware(req: NextRequest) {
   }
   if ((token as any).status !== 'APPROVED') {
     // Authenticated but not approved: allow profile management routes
-    const PENDING_ALLOWED_PREFIXES = ['/pending', '/profile', '/api/profile'];
+    const PENDING_ALLOWED_PREFIXES = ['/pending', '/profile', '/api/profile', '/marketplace', '/users', '/uploads'];
     if (PENDING_ALLOWED_PREFIXES.some(p => pathname.startsWith(p))) {
       const res = NextResponse.next();
       res.headers.set('x-request-id', requestId);

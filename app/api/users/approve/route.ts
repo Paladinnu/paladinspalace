@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { prisma } from '../../../../lib/listings';
+import prisma from '../../../../lib/prisma';
 import { sendDiscordWebhook } from '../../../../lib/discord';
 
 export async function POST(req: NextRequest) {

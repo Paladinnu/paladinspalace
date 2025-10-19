@@ -3,7 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { prisma } from '../../../../lib/listings';
+import prisma from '../../../../lib/prisma';
 import { rateLimit } from '../../../../lib/rateLimit';
 import { sniffImageMime } from '../../../../lib/mimeSniff';
 import { ERR } from '../../../../lib/errors';
