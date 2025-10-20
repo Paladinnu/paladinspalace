@@ -13,7 +13,6 @@ const PUBLIC_PREFIXES = [
   '/api/password',
   '/api/register',
   '/_next', // Next.js assets
-  '/marketplace',
   '/uploads',
   '/favicon', '/icon', '/apple-icon',
   '/robots.txt', '/sitemap.xml'
@@ -45,7 +44,7 @@ export async function middleware(req: NextRequest) {
     applySecurityHeaders(res);
     return res;
   }
-  // Allowlist public assets and pages
+  // Allowlist public assets and pages (except /marketplace which we handle below)
   if (PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) {
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);
@@ -66,6 +65,30 @@ export async function middleware(req: NextRequest) {
       return res;
     }
   }
+  // Special case: Marketplace
+  // - Unauthenticated users can view marketplace
+  // - Authenticated but not APPROVED users are redirected to /pending
+  if (pathname.startsWith('/marketplace')) {
+    const tokenMaybe = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!tokenMaybe) {
+      const res = NextResponse.next();
+      res.headers.set('x-request-id', requestId);
+      applySecurityHeaders(res);
+      return res;
+    }
+    if ((tokenMaybe as any).status !== 'APPROVED') {
+      const res = NextResponse.redirect(new URL('/pending', req.url));
+      res.headers.set('x-request-id', requestId);
+      applySecurityHeaders(res);
+      logger.info('auth_redirect_pending_marketplace', { requestId, path: pathname, userId: (tokenMaybe as any).sub });
+      return res;
+    }
+    const res = NextResponse.next();
+    res.headers.set('x-request-id', requestId);
+    applySecurityHeaders(res);
+    return res;
+  }
+
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token) {
     const res = NextResponse.redirect(new URL('/login', req.url));
