@@ -11,7 +11,9 @@ import { ERR } from './errors';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: { strategy: 'jwt', maxAge: 3600 },
+  // Ensure a stable secret for JWT encryption/decryption
+  secret: process.env.NEXTAUTH_SECRET as string,
   providers: [
     Credentials({
       name: 'Credentials',
@@ -39,6 +41,18 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           audit({ action: 'LOGIN_FAIL', ip, userAgent: ua, metadata: { email, reason: 'USER_NOT_FOUND' } });
           return null;
+        }
+        if (user.status === 'SUSPENDED') {
+          audit({
+            userId: user.id,
+            action: 'LOGIN_BLOCKED',
+            entityType: 'USER',
+            entityId: user.id,
+            ip,
+            userAgent: ua,
+            metadata: { email, reason: 'SUSPENDED' },
+          });
+          throw new Error('Unauthorized');
         }
         let ok = false;
         try { ok = await bcrypt.compare(credentials.password, user.passwordHash); } catch {}

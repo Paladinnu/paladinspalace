@@ -1,3 +1,14 @@
 paladinspalace.com {
+  @http scheme http
+  redir @http https://paladinspalace.com{uri} 301
+  header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload"
   reverse_proxy web:8080
+}
+
+www.paladinspalace.com {
+  redir https://paladinspalace.com{uri} 301
+}
+
+:80 {
+  redir https://paladinspalace.com{uri} 301
 }

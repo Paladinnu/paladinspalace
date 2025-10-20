@@ -1,13 +1,21 @@
 "use client";
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useListings } from '../../lib/hooks/useListings';
 import Image from 'next/image';
 import { MarketplaceFilters } from '../../components/MarketplaceFilters';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 function MarketplaceInner() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const { status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push('/login');
+    },
+  });
+
+  const searchParams = useSearchParams();
   const initialCat = searchParams.get('category') || '';
   const { listings, loading, error, hasMore, loadMore, setSearch } = useListings({ category: initialCat || undefined, sort: 'new' });
   const [q, setQ] = useState('');
@@ -319,6 +327,10 @@ function MarketplaceInner() {
   // No category meta fetch needed anymore
 
   // Debounce este în hook; apelăm setSearch la fiecare schimbare.
+
+  if (status === 'loading') {
+    return <div className="p-4 text-sm text-brand-white/70">Se verifică autentificarea...</div>;
+  }
 
   return (
     <div className="space-y-4">

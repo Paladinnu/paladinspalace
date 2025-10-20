@@ -43,6 +43,7 @@ export function Navbar() {
   }, [user]);
   function logout() { signOut({ callbackUrl: '/' }); }
   const links = (() => {
+    if (!user) return [];
     const isMod = user && (user.role === 'MODERATOR' || user.role === 'ADMIN');
     const modLinks = isMod ? [...baseLinks, { href: '/dashboard', label: 'Panou' }] : baseLinks;
     const isAdmin = user && user.role === 'ADMIN';

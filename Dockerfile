@@ -3,8 +3,9 @@
 
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
+# Skip project postinstall scripts here (prisma generate) to avoid schema missing
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
 
 FROM node:20-bookworm-slim AS builder
@@ -13,6 +14,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Generate Prisma client and build Next.js
+RUN apt-get update && apt-get install -y openssl \
+	&& rm -rf /var/lib/apt/lists/*
 RUN npx prisma generate
 RUN npm run build
 
@@ -26,6 +29,8 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+RUN apt-get update && apt-get install -y openssl \
+	&& rm -rf /var/lib/apt/lists/*
 EXPOSE 8080
-# Apply DB schema on container start, then run the server
-CMD sh -c "npx prisma migrate deploy || echo 'prisma migrate deploy failed (continuing)'; npm run start"
+# Start the app (prisma migrate deploy is run via package.json start:prepare)
+CMD npm run start

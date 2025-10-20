@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
   "start": "npm run start:prepare && next start -p $PORT",
-    "start:prepare": "node -e \"(async()=>{try{console.log('Applying Prisma schema...');const {execa}=await import('node:child_process');const cp=require('child_process');cp.execSync('npx prisma migrate deploy',{stdio:'inherit'});}catch(e){console.error('Prisma migrate deploy failed (non-fatal for preview):',e?.message||e);}})()\"",
+  "start:prepare": "sh -c 'echo Applying Prisma schema...; npx prisma migrate deploy'",
     "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
   "vercel-build": "prisma generate && next build",

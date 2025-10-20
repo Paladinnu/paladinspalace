@@ -2,6 +2,10 @@
 node_modules/
 .next/
 .out/
+.DS_Store
+prisma/migrations.tar.gz
+deploy-palace.tar.gz
+migration_lock.toml
 dist/
 .build/
 .cache/
